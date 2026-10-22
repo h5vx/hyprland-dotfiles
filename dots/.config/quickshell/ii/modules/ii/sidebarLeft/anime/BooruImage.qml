@@ -179,6 +179,22 @@ Button {
                                 ])
                             }
                         }
+                        MenuButton {
+                            id: setWallpaperButton
+                            Layout.fillWidth: true
+                            buttonText: Translation.tr("Set as wallpaper")
+                            onClicked: {
+                                root.showActions = false;
+                                const wallpaperDir = FileUtils.trimFileProtocol(`${Directories.pictures}/Wallpapers`)
+                                const targetFile = StringUtils.shellSingleQuoteEscape(`${wallpaperDir}/${root.fileName}`)
+                                const userAgent = Config.options?.networking?.userAgent ?? ""
+                                const userAgentHeader = userAgent ? ` -H 'User-Agent: ${StringUtils.shellSingleQuoteEscape(userAgent)}'` : ""
+                                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                                Quickshell.execDetached(["bash", "-c",
+                                    `mkdir -p '${StringUtils.shellSingleQuoteEscape(wallpaperDir)}' && curl -fL '${StringUtils.shellSingleQuoteEscape(root.imageData.file_url)}'${userAgentHeader} -o '${targetFile}' && '${StringUtils.shellSingleQuoteEscape(Directories.wallpaperSwitchScriptPath)}' --mode ${mode} --image '${targetFile}'`
+                                ])
+                            }
+                        }
                     }
                 }
             }

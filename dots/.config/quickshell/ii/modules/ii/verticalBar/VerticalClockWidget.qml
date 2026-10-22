@@ -35,6 +35,7 @@ Item {
                             // Smaller "am"/"pm" text
                             return Appearance.font.pixelSize.large;
                     }
+                    font.features: { "tnum": 1 } // Equal-width digits so stacked numbers line up
                     color: Appearance.colors.colOnLayer1
                     text: modelData.padStart(2, "0")
                 }

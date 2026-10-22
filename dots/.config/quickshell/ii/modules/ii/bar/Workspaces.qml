@@ -28,6 +28,9 @@ ButtonMouseArea {
     property real activeWorkspaceSize: workspaceButtonWidth - activeWorkspaceMargin * 2
     property real workspaceIconSize: workspaceButtonWidth * 0.69
     property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
+    // Layers are rendered above device resolution so icons stay sharp with fractional scaling
+    property real layerTextureScale: ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1) * 2
+    property real workspaceIconFillRatio: 0.8 // App icon size relative to its circular mask, so square icons aren't cropped
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
     property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - 1) % wsModel.shownCount
@@ -219,8 +222,8 @@ ButtonMouseArea {
                     property var biggestWindow: wsModel.biggestWindow[index]
                     property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
 
-                    AppIcon {
-                        id: appIcon
+                    Item {
+                        id: appIconContainer
                         property real cornerMargin: (!root.superPressAndHeld && Config.options?.bar.workspaces.showAppIcons && wsApp.biggestWindow) ? (root.workspaceButtonWidth - root.workspaceIconSize) / 2 : root.workspaceIconMarginShrinked
                         anchors {
                             bottom: parent.bottom
@@ -228,18 +231,24 @@ ButtonMouseArea {
                             bottomMargin: (parent.implicitHeight - root.workspaceButtonWidth) / 2 + cornerMargin
                             rightMargin: (parent.implicitWidth - root.workspaceButtonWidth) / 2 + cornerMargin
                         }
+                        implicitWidth: NumberUtils.roundToEven(root.workspaceIconSize)
+                        implicitHeight: implicitWidth
 
-                        animated: !wsApp.biggestWindow // Prevent the "image-missing" icon
                         visible: false // Prevent dupe: the colorizer already copies the icon
+                        layer.enabled: true
+                        layer.smooth: true
+                        layer.textureSize: Qt.size(Math.ceil(width * root.layerTextureScale), Math.ceil(height * root.layerTextureScale))
 
-                        source: wsApp.mainAppIconSource
-                        implicitSize: NumberUtils.roundToEven(root.workspaceIconSize)
-
-                        Behavior on opacity {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
                         Behavior on cornerMargin {
                             animation: Appearance.animation.elementMoveSmall.numberAnimation.createObject(this)
+                        }
+
+                        AppIcon {
+                            id: appIcon
+                            anchors.centerIn: parent
+                            animated: !wsApp.biggestWindow // Prevent the "image-missing" icon
+                            source: wsApp.mainAppIconSource
+                            implicitSize: NumberUtils.roundToEven(root.workspaceIconSize * root.workspaceIconFillRatio)
                         }
                     }
 
@@ -247,19 +256,21 @@ ButtonMouseArea {
                         id: iconMask
                         visible: false
                         layer.enabled: true
-                        diameter: appIcon.implicitSize
+                        layer.smooth: true
+                        layer.textureSize: Qt.size(Math.ceil(width * root.layerTextureScale), Math.ceil(height * root.layerTextureScale))
+                        diameter: appIconContainer.implicitWidth
                     }
 
                     Loader { // Somehow putting this multieffect in a loader prevents it from not showing up
                         id: colorizer
-                        anchors.fill: appIcon
+                        anchors.fill: appIconContainer
                         sourceComponent: Colorizer {
-                            implicitWidth: appIcon.implicitWidth
-                            implicitHeight: appIcon.implicitHeight
+                            implicitWidth: appIconContainer.implicitWidth
+                            implicitHeight: appIconContainer.implicitHeight
                             colorizationColor: Appearance.m3colors.darkmode ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnPrimary
                             colorization: Config.options.bar.workspaces.monochromeIcons ? 0.8 : 0.5
                             brightness: 0
-                            source: appIcon
+                            source: appIconContainer
 
                             opacity: !Config.options?.bar.workspaces.showAppIcons ? 0 : (wsApp.biggestWindow && !root.superPressAndHeld && Config.options?.bar.workspaces.showAppIcons) ? 1 : wsApp.biggestWindow ? root.workspaceIconOpacityShrinked : 0
                             visible: opacity > 0

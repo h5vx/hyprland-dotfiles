@@ -25,7 +25,7 @@ Item {
             font.weight: Font.Medium
             fill: 1
             text: root.iconName
-            iconSize: 13
+            iconSize: Appearance.font.pixelSize.normal
             color: Appearance.colors.colOnSecondaryContainer
         }
     }

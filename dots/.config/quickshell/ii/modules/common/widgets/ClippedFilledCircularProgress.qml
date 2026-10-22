@@ -3,6 +3,7 @@ import qs.modules.common.functions
 import QtQuick
 import QtQuick.Shapes
 import Qt5Compat.GraphicalEffects
+import Quickshell
 
 Item {
     id: root
@@ -38,6 +39,8 @@ Item {
     property real centerY: root.height / 2
     property real arcRadius: root.implicitSize / 2 - root.lineWidth / 2 - (0.5 * root.accountForLightBleeding)
     property real startAngle: -90
+    // Layers are rendered above device resolution so masks stay sharp with fractional scaling
+    property real layerTextureScale: ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1) * 2
 
     Behavior on degree {
         enabled: root.enableAnimation
@@ -56,6 +59,7 @@ Item {
         visible: false
         layer.enabled: true
         layer.smooth: true
+        layer.textureSize: Qt.size(Math.ceil(width * root.layerTextureScale), Math.ceil(height * root.layerTextureScale))
 
         Shape {
             anchors.fill: parent
@@ -89,10 +93,31 @@ Item {
         }
     }
 
+    // Holds the mask at its own size, centered, so it isn't stretched to fill the circle
+    Item {
+        id: maskContainer
+        anchors.fill: parent
+        visible: false
+        layer.enabled: true
+        layer.smooth: true
+        layer.textureSize: Qt.size(Math.ceil(width * root.layerTextureScale), Math.ceil(height * root.layerTextureScale))
+        data: [root.textMask]
+    }
+    Binding {
+        target: root.textMask
+        property: "x"
+        value: (maskContainer.width - root.textMask.width) / 2
+    }
+    Binding {
+        target: root.textMask
+        property: "y"
+        value: (maskContainer.height - root.textMask.height) / 2
+    }
+
     OpacityMask {
         anchors.fill: parent
         source: contentItem
         invert: true
-        maskSource: root.textMask
+        maskSource: maskContainer
     }
 }

@@ -91,6 +91,32 @@ Singleton {
                 })
             }
         },
+        "wallhaven": {
+            "name": "Wallhaven",
+            "url": "https://wallhaven.cc",
+            "api": "https://wallhaven.cc/api/v1/search",
+            "description": Translation.tr("Wallpapers of all kinds | Excellent quality, huge quantity"),
+            "mapFunc": (response) => {
+                response = response.data
+                return response.map(item => {
+                    return {
+                        "id": item.id,
+                        "width": item.dimension_x,
+                        "height": item.dimension_y,
+                        "aspect_ratio": item.dimension_x / item.dimension_y,
+                        "tags": `${item.category} ${item.resolution}`, // Search results don't include tags
+                        "rating": item.purity === "sfw" ? "s" : item.purity === "sketchy" ? "q" : "e",
+                        "is_nsfw": item.purity !== "sfw",
+                        "md5": item.id,
+                        "preview_url": item.thumbs.original,
+                        "sample_url": item.thumbs.original,
+                        "file_url": item.path,
+                        "file_ext": item.path.split('.').pop(),
+                        "source": item.url,
+                    }
+                })
+            }
+        },
         "zerochan": {
             "name": "Zerochan",
             "url": "https://www.zerochan.net",
@@ -311,7 +337,7 @@ Singleton {
         var baseUrl = provider.api
         var url = baseUrl
         var tagString = tags.join(" ")
-        if (!nsfw && !(["zerochan", "waifu.im", "t.alcy.cc"].includes(currentProvider))) {
+        if (!nsfw && !(["zerochan", "waifu.im", "t.alcy.cc", "wallhaven"].includes(currentProvider))) {
             if (currentProvider == "gelbooru") 
                 tagString += " rating:general";
             else 
@@ -333,6 +359,14 @@ Singleton {
             });
             params.push("PageSize=" + Math.min(limit, 30)) // Only admin can do > 30
             params.push("IsNsfw=" + (nsfw ? "All" : "False")) // null is random
+        }
+        else if (currentProvider === "wallhaven") {
+            // Page size is fixed at 24; NSFW purity needs an API key, so "nsfw" means SFW + sketchy
+            params.push("q=" + encodeURIComponent(tagString))
+            params.push("categories=111")
+            params.push("purity=" + (nsfw ? "110" : "100"))
+            params.push("sorting=" + (tagString.trim().length > 0 ? "relevance" : "toplist"))
+            params.push("page=" + page)
         }
         else if (currentProvider === "t.alcy.cc") {
             url += tagString

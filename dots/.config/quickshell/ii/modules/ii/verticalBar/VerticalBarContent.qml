@@ -51,7 +51,7 @@ Item { // Bar content region
         anchors.top: parent.top
         implicitHeight: topSectionColumnLayout.implicitHeight
         implicitWidth: Appearance.sizes.baseVerticalBarWidth
-        height: (root.height - middleSection.height) / 2
+        height: middleSection.y
         width: Appearance.sizes.verticalBarWidth
 
         onScrollDown: Brightness.decreaseBrightness()
@@ -82,7 +82,10 @@ Item { // Bar content region
 
     Column { // Middle section
         id: middleSection
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        // Centered, but pushed up when the bottom section (system tray) grows into it
+        y: Math.max(barTopSectionMouseArea.implicitHeight,
+            Math.min((root.height - height) / 2, barBottomSectionMouseArea.y - height - spacing))
         spacing: 4
 
         Bar.BarGroup {
@@ -124,6 +127,10 @@ Item { // Bar content region
                         }
                     }
                 }
+            }
+
+            LayoutModeIndicator {
+                Layout.alignment: Qt.AlignHCenter
             }
         }
 
