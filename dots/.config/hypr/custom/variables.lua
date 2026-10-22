@@ -1,1 +1,1 @@
-
+fileManager = "nautilus --new-window"

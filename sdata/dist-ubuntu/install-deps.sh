@@ -34,7 +34,7 @@ ubuntu_pkgs_fonts_themes=(
   fonts-space-grotesk fonts-noto-color-emoji
 )
 ubuntu_pkgs_hyprland=(hyprland hyprsunset wl-clipboard)
-ubuntu_pkgs_portal=(xdg-desktop-portal xdg-desktop-portal-kde xdg-desktop-portal-gtk xdg-desktop-portal-hyprland)
+ubuntu_pkgs_portal=(xdg-desktop-portal xdg-desktop-portal-kde xdg-desktop-portal-gtk xdg-desktop-portal-gnome xdg-desktop-portal-hyprland nautilus qt6-gtk-platformtheme)
 ubuntu_pkgs_python=(
   clang build-essential pkg-config
   libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libportal-gtk4-dev
