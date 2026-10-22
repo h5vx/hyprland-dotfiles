@@ -67,10 +67,14 @@ local function setFloating(w, enable)
 end
 
 local function updateRules(id)
-	local mode = modes[id] or "dwindle"
-	scrollRules[id] = scrollRules[id]
-		or hl.workspace_rule({ workspace = tostring(id), layout = "scrolling", enabled = false })
-	scrollRules[id]:set_enabled(mode == "scrolling")
+	local enabled = (modes[id] or "dwindle") == "scrolling"
+	if scrollRules[id] then
+		scrollRules[id]:set_enabled(enabled)
+		return
+	end
+	-- Hyprland < 0.56 returns no rule handle; there a new rule for the same workspace replaces
+	-- the old one, so it is simply added again on every change
+	scrollRules[id] = hl.workspace_rule({ workspace = tostring(id), layout = "scrolling", enabled = enabled })
 end
 
 -- Usable monitor area in logical coordinates (without the bar and other reserved space)
